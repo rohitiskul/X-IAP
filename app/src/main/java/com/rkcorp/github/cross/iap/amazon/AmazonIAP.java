@@ -48,6 +48,8 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
 
     @Override
     public void purchase(String sku, boolean isConsumable) {
+        if (listener() != null)
+            listener().onPrePurchase();
         super.purchase(sku, isConsumable);
         // Make purchase
         PurchasingService.purchase(sku);

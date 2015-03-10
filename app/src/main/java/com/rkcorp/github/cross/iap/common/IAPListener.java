@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 
 /**
+ * To listen to purchase callbacks
  * Created by Rohit.Kulkarni on 3/5/15.
  */
 public interface IAPListener {

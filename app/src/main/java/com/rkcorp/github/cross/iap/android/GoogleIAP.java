@@ -47,6 +47,8 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
 
     @Override
     public void purchase(final String sku, boolean isConsumable) {
+        if (listener() != null)
+            listener().onPrePurchase();
         super.purchase(sku, isConsumable);
         activityCheckout.whenReady(new Checkout.ListenerAdapter() {
             @Override
@@ -95,6 +97,16 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     @Override
     public void onLoaded(Inventory.Products products) {
         final Inventory.Product product = products.get(ProductTypes.IN_APP);
+        final ArrayList<SkuData> availableSku = new ArrayList<>();
+        for (Sku sku : product.getSkus()) {
+            SkuData skuData = new SkuData();
+            skuData.id = sku.id;
+            skuData.price = sku.price;
+            skuData.title = sku.title;
+            availableSku.add(skuData);
+        }
+        if (listener() != null)
+            listener().onFetchInventory(availableSku, null);
         final ArrayList<RestoreSku> restoreSkuList = new ArrayList<>();
         for (Purchase purchase : product.getPurchases()) {
             final SkuData data = new SkuData();

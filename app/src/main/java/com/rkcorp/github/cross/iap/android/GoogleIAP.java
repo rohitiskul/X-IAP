@@ -138,7 +138,7 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
             inventory.load().whenLoaded(GoogleIAP.this);
             if (listener() != null) {
                 final Pair<String, String> signedData = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchase.toJson());
-                final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchase.signature);
+                final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNATURE, purchase.signature);
                 listener().onPurchaseSuccess(purchase.sku, signedData, signature);
             }
         }

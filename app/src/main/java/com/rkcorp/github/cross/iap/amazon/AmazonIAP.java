@@ -126,7 +126,7 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
                 if (listener() != null) {
                     //Here in amazon purchase and consume is same
                     final Pair<String, String> signedData = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchaseResponse.getReceipt().getReceiptId());
-                    final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchaseResponse.getRequestId().toString());
+                    final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNATURE, purchaseResponse.getRequestId().toString());
                     listener().onPurchaseSuccess(purchaseResponse.getReceipt().getSku(), signedData, signature);
                     //If product is not an "Entitlement" then send callback for consume
                     if (purchaseResponse.getReceipt().getProductType() != ProductType.ENTITLED)

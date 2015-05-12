@@ -112,6 +112,7 @@ public class XIAP {
      * Destroy initialized purchasing manager
      */
     public void destroy() {
+        mIAPManager.setListener(null);
         mIAPManager.onDestroy();
     }
 

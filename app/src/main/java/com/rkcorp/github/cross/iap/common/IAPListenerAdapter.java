@@ -24,7 +24,7 @@ public class IAPListenerAdapter implements IAPListener {
     }
 
     @Override
-    public void onPurchaseSuccess(String sku, Pair signedData, Pair signature) {
+    public void onPurchaseSuccess(String sku, Pair<String, String> signedData, Pair<String, String> signature) {
 
     }
 

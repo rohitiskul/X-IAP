@@ -19,7 +19,7 @@ public interface IAPListener {
 
     void onPrePurchase();
 
-    void onPurchaseSuccess(String sku, Pair signedData, Pair signature);
+    void onPurchaseSuccess(String sku, Pair<String, String> signedData, Pair<String, String> signature);
 
     void onPurchaseFailed(String sku, Reason reason);
 

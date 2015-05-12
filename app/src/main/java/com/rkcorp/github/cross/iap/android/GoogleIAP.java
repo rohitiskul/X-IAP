@@ -3,11 +3,9 @@ package com.rkcorp.github.cross.iap.android;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Pair;
 
 import com.rkcorp.github.cross.iap.common.AbstractIAPManager;
 import com.rkcorp.github.cross.iap.common.Reason;
-import com.rkcorp.github.cross.iap.common.XIAP;
 import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
 
@@ -137,9 +135,7 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
             // let's update purchase information in local inventory
             inventory.load().whenLoaded(GoogleIAP.this);
             if (listener() != null) {
-                final Pair<String, String> signedData = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchase.toJson());
-                final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNATURE, purchase.signature);
-                listener().onPurchaseSuccess(purchase.sku, signedData, signature);
+                listener().onPurchaseSuccess(purchase.sku, purchase.toJson(), purchase.signature);
             }
         }
 

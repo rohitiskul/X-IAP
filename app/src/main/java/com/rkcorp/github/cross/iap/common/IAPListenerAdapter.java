@@ -1,9 +1,9 @@
 package com.rkcorp.github.cross.iap.common;
 
+import android.util.Pair;
+
 import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
-
-import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
 
@@ -24,7 +24,7 @@ public class IAPListenerAdapter implements IAPListener {
     }
 
     @Override
-    public void onPurchaseSuccess(String sku, BasicNameValuePair... extraData) {
+    public void onPurchaseSuccess(String sku, Pair signedData, Pair signature) {
 
     }
 

@@ -3,6 +3,7 @@ package com.rkcorp.github.cross.iap.android;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Pair;
 
 import com.rkcorp.github.cross.iap.common.AbstractIAPManager;
 import com.rkcorp.github.cross.iap.common.Reason;
@@ -10,7 +11,6 @@ import com.rkcorp.github.cross.iap.common.XIAP;
 import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
 
-import org.apache.http.message.BasicNameValuePair;
 import org.solovyev.android.checkout.ActivityCheckout;
 import org.solovyev.android.checkout.Billing;
 import org.solovyev.android.checkout.BillingRequests;
@@ -87,6 +87,7 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     public void onDestroy() {
         activityCheckout.destroyPurchaseFlow();
         activityCheckout.stop();
+        activityCheckout = null;
     }
 
     @Override
@@ -136,8 +137,8 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
             // let's update purchase information in local inventory
             inventory.load().whenLoaded(GoogleIAP.this);
             if (listener() != null) {
-                final BasicNameValuePair signedData = new BasicNameValuePair(XIAP.XTRA_SIGNED_DATA, purchase.toJson());
-                final BasicNameValuePair signature = new BasicNameValuePair(XIAP.XTRA_SIGNATURE, purchase.signature);
+                final Pair<String, String> signedData = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchase.toJson());
+                final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchase.signature);
                 listener().onPurchaseSuccess(purchase.sku, signedData, signature);
             }
         }

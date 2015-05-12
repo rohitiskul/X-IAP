@@ -1,10 +1,10 @@
 package com.rkcorp.github.cross.iap.common;
 
 
+import android.util.Pair;
+
 import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
-
-import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
 
@@ -15,17 +15,17 @@ import java.util.ArrayList;
  */
 public interface IAPListener {
 
-    public void onFetchInventory(final ArrayList<SkuData> availableSkus, final ArrayList<SkuData> unavailableSkus);
+    void onFetchInventory(final ArrayList<SkuData> availableSkus, final ArrayList<SkuData> unavailableSkus);
 
-    public void onPrePurchase();
+    void onPrePurchase();
 
-    public void onPurchaseSuccess(String sku, BasicNameValuePair... extraData);
+    void onPurchaseSuccess(String sku, Pair signedData, Pair signature);
 
-    public void onPurchaseFailed(String sku, Reason reason);
+    void onPurchaseFailed(String sku, Reason reason);
 
-    public void onConsumeSuccess(String sku);
+    void onConsumeSuccess(String sku);
 
-    public void onConsumeFailed();
+    void onConsumeFailed();
 
-    public void onRestorePurchases(final ArrayList<RestoreSku> restoreSkus);
+    void onRestorePurchases(final ArrayList<RestoreSku> restoreSkus);
 }

@@ -3,6 +3,7 @@ package com.rkcorp.github.cross.iap.amazon;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.util.Pair;
 
 import com.amazon.device.iap.PurchasingListener;
 import com.amazon.device.iap.PurchasingService;
@@ -20,8 +21,6 @@ import com.rkcorp.github.cross.iap.common.Reason;
 import com.rkcorp.github.cross.iap.common.XIAP;
 import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
-
-import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,8 +125,8 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
                 PurchasingService.notifyFulfillment(purchaseResponse.getReceipt().getReceiptId(), FulfillmentResult.FULFILLED);
                 if (listener() != null) {
                     //Here in amazon purchase and consume is same
-                    final BasicNameValuePair signedData = new BasicNameValuePair(XIAP.XTRA_SIGNED_DATA, purchaseResponse.getReceipt().getReceiptId());
-                    final BasicNameValuePair signature = new BasicNameValuePair(XIAP.XTRA_SIGNATURE, purchaseResponse.getRequestId().toString());
+                    final Pair<String, String> signedData = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchaseResponse.getReceipt().getReceiptId());
+                    final Pair<String, String> signature = new Pair<>(XIAP.XTRA_SIGNED_DATA, purchaseResponse.getRequestId().toString());
                     listener().onPurchaseSuccess(purchaseResponse.getReceipt().getSku(), signedData, signature);
                     //If product is not an "Entitlement" then send callback for consume
                     if (purchaseResponse.getReceipt().getProductType() != ProductType.ENTITLED)

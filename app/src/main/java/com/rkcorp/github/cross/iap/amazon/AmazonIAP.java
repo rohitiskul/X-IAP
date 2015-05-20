@@ -21,7 +21,6 @@ import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -44,18 +43,18 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
     }
 
     @Override
-    public void purchase(String sku, boolean isConsumable) {
+    public void purchase(String sku) {
         if (listener() != null)
             listener().onPrePurchase();
-        super.purchase(sku, isConsumable);
+        super.purchase(sku);
         // Make purchase
         PurchasingService.purchase(sku);
     }
 
     @Override
-    public void fetchInventory(String... sku) {
+    public void fetchInventory(ArrayList<String> sku) {
         Set<String> skuList = new HashSet<>();
-        Collections.addAll(skuList, sku);
+        skuList.addAll(sku);
         PurchasingService.getProductData(skuList);
     }
 
@@ -65,6 +64,11 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    }
+
+    @Override
+    public void restorePurchases() {
+        //TODO
     }
 
     /**

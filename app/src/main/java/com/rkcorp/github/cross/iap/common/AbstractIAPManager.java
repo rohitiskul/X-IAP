@@ -3,6 +3,8 @@ package com.rkcorp.github.cross.iap.common;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.ArrayList;
+
 /**
  * Abstract manager which will act as a Parent for android/kindle iap managers.
  * Created by Rohit.Kulkarni on 3/5/15.
@@ -14,8 +16,6 @@ public abstract class AbstractIAPManager {
     private IAPListener mIapListener;
 
     private String mSkuInProgress;
-
-    private boolean mIsConsumable;
 
     protected AbstractIAPManager(final Context context) {
         mContext = context;
@@ -45,19 +45,14 @@ public abstract class AbstractIAPManager {
         return mSkuInProgress;
     }
 
-    protected boolean skuIsConsumable() {
-        return mIsConsumable;
-    }
 
-
-    public void purchase(final String sku, final boolean isConsumable) {
+    public void purchase(final String sku) {
         mSkuInProgress = sku;
-        mIsConsumable = isConsumable;
         if (mIapListener != null)
             mIapListener.onPrePurchase();
     }
 
-    public abstract void fetchInventory(final String... skuList);
+    public abstract void fetchInventory(final ArrayList<String> skuList);
 
     public abstract void onCreate(Context context);
 
@@ -65,4 +60,5 @@ public abstract class AbstractIAPManager {
 
     public abstract void onActivityResult(int requestCode, int resultCode, Intent data);
 
+    public abstract void restorePurchases();
 }

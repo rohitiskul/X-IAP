@@ -24,6 +24,7 @@ import org.solovyev.android.checkout.Sku;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Google play store purchasing manager
@@ -35,19 +36,24 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     private final Checkout applicationCheckout;
     private ActivityCheckout activityCheckout;
     private Inventory inventory;
+    private List<String> nonConsumables;
 
 
-    public GoogleIAP(Context context, String googleKey, String[] products) {
+    public GoogleIAP(Context context, String googleKey, String[] consumables, String[] nonConsumables) {
         super(context);
+        this.nonConsumables = Arrays.asList(nonConsumables);
+        final ArrayList<String> products = new ArrayList<>();
+        products.addAll(Arrays.asList(consumables));
+        products.addAll(Arrays.asList(nonConsumables));
         final Billing billing = new Billing(context, new BillingConfig(googleKey));
-        applicationCheckout = Checkout.forApplication(billing, Products.create().add(ProductTypes.IN_APP, Arrays.asList(products)));
+        applicationCheckout = Checkout.forApplication(billing, Products.create().add(ProductTypes.IN_APP, products));
     }
 
     @Override
-    public void purchase(final String sku, boolean isConsumable) {
+    public void purchase(final String sku) {
         if (listener() != null)
             listener().onPrePurchase();
-        super.purchase(sku, isConsumable);
+        super.purchase(sku);
         activityCheckout.whenReady(new Checkout.ListenerAdapter() {
             @Override
             public void onReady(BillingRequests requests) {
@@ -57,7 +63,7 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     }
 
     @Override
-    public void fetchInventory(String... skuList) {
+    public void fetchInventory(ArrayList<String> skuList) {
         inventory = activityCheckout.loadInventory();
         inventory.whenLoaded(this);
     }
@@ -94,6 +100,11 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     }
 
     @Override
+    public void restorePurchases() {
+        inventory.load().whenLoaded(GoogleIAP.this);
+    }
+
+    @Override
     public void onLoaded(Inventory.Products products) {
         final Inventory.Product product = products.get(ProductTypes.IN_APP);
         final ArrayList<SkuData> availableSku = new ArrayList<>();
@@ -123,7 +134,8 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
                 final Purchase purchase = product.getPurchaseInState(sku, Purchase.State.PURCHASED);
                 if (purchase == null)
                     continue;
-                consume(purchase.token, new ConsumeListener(sku.id));
+                if (!nonConsumables.contains(purchase.sku))
+                    consume(purchase.token, new ConsumeListener(sku.id));
             }
         }
     }
@@ -133,7 +145,8 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
         @Override
         public void onSuccess(Purchase purchase) {
             // let's update purchase information in local inventory
-            inventory.load().whenLoaded(GoogleIAP.this);
+            if (!nonConsumables.contains(purchase.sku))
+                consume(purchase.token, new ConsumeListener(purchase.sku));
             if (listener() != null) {
                 listener().onPurchaseSuccess(purchase.sku, purchase.toJson(), purchase.signature);
             }
@@ -160,7 +173,6 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
 
         @Override
         public void onSuccess(Object result) {
-            inventory.load().whenLoaded(GoogleIAP.this);
             if (listener() != null)
                 listener().onConsumeSuccess(prodId);
         }
@@ -170,9 +182,10 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
             // it is possible that our data is not synchronized with data on Google Play => need to handle some errors
             if (response == ResponseCodes.ITEM_NOT_OWNED) {
                 inventory.load().whenLoaded(GoogleIAP.this);
+            } else {
+                if (listener() != null)
+                    listener().onConsumeFailed();
             }
-            if (listener() != null)
-                listener().onConsumeFailed();
         }
     }
 }

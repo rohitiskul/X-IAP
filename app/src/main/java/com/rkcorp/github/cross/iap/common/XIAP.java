@@ -9,36 +9,37 @@ import android.os.Build;
 import com.rkcorp.github.cross.iap.amazon.AmazonIAP;
 import com.rkcorp.github.cross.iap.android.GoogleIAP;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 
 /**
  * Factory class for in-app purchases management
  * Created by Rohit.Kulkarni on 3/9/15.
  */
-public class XIAP {
-
-
-    public static final String XTRA_SIGNED_DATA = "signed_data";
-    public static final String XTRA_SIGNATURE = "signature";
+public final class XIAP {
 
     private static XIAP singleton;
-    private String[] mProducts;
+    private String[] mConsumables;
+    private String[] mNonConsumables;
     private AbstractIAPManager mIAPManager;
 
     private XIAP() {
     }
 
-    XIAP(Application application, String[] products, String googleKey) {
+    XIAP(Application application, String[] consumables, String[] nonConsumables, String googleKey) {
         if (application == null) {
             throw new NullPointerException("Application instance must not be null");
         }
-        mProducts = products;
+        mConsumables = consumables;
+        mNonConsumables = nonConsumables;
         final PLATFORM platform = Build.MANUFACTURER.contains("Amazon") ? PLATFORM.AMAZON : PLATFORM.GOOGLE;
         switch (platform) {
             case AMAZON:
                 mIAPManager = new AmazonIAP(application.getApplicationContext());
                 break;
             case GOOGLE:
-                mIAPManager = new GoogleIAP(application.getApplicationContext(), googleKey, mProducts);
+                mIAPManager = new GoogleIAP(application.getApplicationContext(), googleKey, mConsumables, mNonConsumables);
                 break;
         }
     }
@@ -63,7 +64,7 @@ public class XIAP {
      * @param xiapBuilder Instance of Builder class
      */
     public static void create(Builder xiapBuilder) {
-        singleton = new XIAP(xiapBuilder.mApplication, xiapBuilder.mProducts, xiapBuilder.mGoogleKey);
+        singleton = new XIAP(xiapBuilder.mApplication, xiapBuilder.mConsumables, xiapBuilder.mNonConsumables, xiapBuilder.mGoogleKey);
     }
 
     /**
@@ -94,18 +95,27 @@ public class XIAP {
     /**
      * Initiate purchase
      *
-     * @param sku          Name of the product on market
-     * @param isConsumable Is this in-app product consumable
+     * @param sku Name of the product on market
      */
-    public void purchase(final String sku, final boolean isConsumable) {
-        mIAPManager.purchase(sku, isConsumable);
+    public void purchase(final String sku) {
+        mIAPManager.purchase(sku);
     }
 
     /**
      * Refresh inventory. You should listen to {@link IAPListener}.onFetchInventory(availableSku, unavailableSku) method
      */
     public void fetchInventory() {
-        mIAPManager.fetchInventory(mProducts);
+        final ArrayList<String> products = new ArrayList<>();
+        products.addAll(Arrays.asList(mConsumables));
+        products.addAll(Arrays.asList(mNonConsumables));
+        mIAPManager.fetchInventory(products);
+    }
+
+    /**
+     * Restore purchases. Listen to
+     */
+    public void restorePurchases() {
+        mIAPManager.restorePurchases();
     }
 
     /**
@@ -124,7 +134,8 @@ public class XIAP {
     public static final class Builder {
 
         private Application mApplication;
-        private String[] mProducts;
+        private String[] mConsumables;
+        private String[] mNonConsumables;
         private String mGoogleKey;
 
         /**
@@ -144,8 +155,13 @@ public class XIAP {
          * @param products Sku list params
          * @return instance of {@link XIAP.Builder}
          */
-        public Builder setProducts(String... products) {
-            mProducts = products;
+        public Builder setConsumables(String... products) {
+            mConsumables = products;
+            return this;
+        }
+
+        public Builder setNonConsumables(String... nonConsumables) {
+            mNonConsumables = nonConsumables;
             return this;
         }
 

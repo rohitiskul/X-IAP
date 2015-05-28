@@ -1,5 +1,6 @@
 package com.rkcorp.github.cross.iap.common;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
@@ -54,7 +55,7 @@ public abstract class AbstractIAPManager {
 
     public abstract void fetchInventory(final ArrayList<String> skuList);
 
-    public abstract void onCreate(Context context);
+    public abstract void onCreate(Activity activity);
 
     public abstract void onDestroy();
 

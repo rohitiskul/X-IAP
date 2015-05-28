@@ -33,15 +33,17 @@ import java.util.List;
 public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener {
 
     public static final String TAG = "###GoogleIAP###";
-    private final Checkout applicationCheckout;
+    private static Checkout applicationCheckout;
     private ActivityCheckout activityCheckout;
     private Inventory inventory;
     private List<String> nonConsumables;
 
-
-    public GoogleIAP(Context context, String googleKey, String[] consumables, String[] nonConsumables) {
+    public GoogleIAP(Context context, String[] nonConsumables) {
         super(context);
         this.nonConsumables = Arrays.asList(nonConsumables);
+    }
+
+    public static void initApp(final Context context, final String googleKey, final String[] consumables, final String[] nonConsumables) {
         final ArrayList<String> products = new ArrayList<>();
         products.addAll(Arrays.asList(consumables));
         products.addAll(Arrays.asList(nonConsumables));
@@ -78,8 +80,7 @@ public class GoogleIAP extends AbstractIAPManager implements Inventory.Listener 
     }
 
     @Override
-    public void onCreate(Context context) {
-        Activity activity = (Activity) context;
+    public void onCreate(Activity activity) {
         activityCheckout = Checkout.forActivity(activity, applicationCheckout);
         activityCheckout.start();
         activityCheckout.createPurchaseFlow(new PurchaseListener());

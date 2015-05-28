@@ -1,5 +1,6 @@
 package com.rkcorp.github.cross.iap.amazon;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -38,8 +39,8 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
     }
 
     @Override
-    public void onCreate(Context context) {
-        PurchasingService.registerListener(context, this);
+    public void onCreate(Activity activity) {
+        PurchasingService.registerListener(activity, this);
     }
 
     @Override

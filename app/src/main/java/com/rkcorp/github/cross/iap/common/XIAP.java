@@ -2,7 +2,6 @@ package com.rkcorp.github.cross.iap.common;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
@@ -11,6 +10,7 @@ import com.rkcorp.github.cross.iap.android.GoogleIAP;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.WeakHashMap;
 
 
 /**
@@ -22,7 +22,9 @@ public final class XIAP {
     private static XIAP singleton;
     private String[] mConsumables;
     private String[] mNonConsumables;
-    private AbstractIAPManager mIAPManager;
+    private PLATFORM mPlatform;
+    private WeakHashMap<Activity, AbstractIAPManager> mIAPMap;
+    private AbstractIAPManager mIAPManagerInUse;
 
     private XIAP() {
     }
@@ -31,15 +33,16 @@ public final class XIAP {
         if (application == null) {
             throw new NullPointerException("Application instance must not be null");
         }
+        mIAPMap = new WeakHashMap<>();
         mConsumables = consumables;
         mNonConsumables = nonConsumables;
-        final PLATFORM platform = Build.MANUFACTURER.contains("Amazon") ? PLATFORM.AMAZON : PLATFORM.GOOGLE;
-        switch (platform) {
+        mPlatform = Build.MANUFACTURER.contains("Amazon") ? PLATFORM.AMAZON : PLATFORM.GOOGLE;
+        switch (mPlatform) {
             case AMAZON:
-                mIAPManager = new AmazonIAP(application.getApplicationContext());
+                //Do nothing
                 break;
             case GOOGLE:
-                mIAPManager = new GoogleIAP(application.getApplicationContext(), googleKey, mConsumables, mNonConsumables);
+                GoogleIAP.initApp(application.getApplicationContext(), googleKey, mConsumables, mNonConsumables);
                 break;
         }
     }
@@ -70,15 +73,31 @@ public final class XIAP {
     /**
      * Must be called in activity onCreate() or fragments onActivityCreated()
      *
-     * @param context  activity context
+     * @param activity activity
      * @param listener if you want to listen to purchasing event
      */
-    public void onCreate(Context context, IAPListener listener) {
-        if (!(context instanceof Activity)) {
-            throw new IllegalArgumentException("Context must be instance of activity when calling onCreate(..) ");
+    public void onCreate(Activity activity, IAPListener listener) {
+        if (mIAPMap == null) {
+            throw new NullPointerException("You must initialize XIAP from XIAP.create()");
         }
-        mIAPManager.setListener(listener);
-        mIAPManager.onCreate(context);
+        switch (mPlatform) {
+            case AMAZON:
+                final AmazonIAP amazonIAP = new AmazonIAP(activity);
+                amazonIAP.setListener(listener);
+                amazonIAP.onCreate(activity);
+                mIAPMap.put(activity, amazonIAP);
+
+                mIAPManagerInUse = amazonIAP;
+                break;
+            case GOOGLE:
+                final GoogleIAP googleIAP = new GoogleIAP(activity, mNonConsumables);
+                googleIAP.setListener(listener);
+                googleIAP.onCreate(activity);
+                mIAPMap.put(activity, googleIAP);
+
+                mIAPManagerInUse = googleIAP;
+                break;
+        }
     }
 
     /**
@@ -88,8 +107,10 @@ public final class XIAP {
      * @param resultCode  resultCode
      * @param data        data
      */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mIAPManager.onActivityResult(requestCode, resultCode, data);
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        if (mIAPManagerInUse == null)
+            return;
+        mIAPManagerInUse.onActivityResult(requestCode, resultCode, data);
     }
 
     /**
@@ -98,34 +119,81 @@ public final class XIAP {
      * @param sku Name of the product on market
      */
     public void purchase(final String sku) {
-        mIAPManager.purchase(sku);
+        if (mIAPManagerInUse == null)
+            return;
+        mIAPManagerInUse.purchase(sku);
     }
 
     /**
      * Refresh inventory. You should listen to {@link IAPListener}.onFetchInventory(availableSku, unavailableSku) method
      */
     public void fetchInventory() {
+        if (mIAPManagerInUse == null)
+            return;
         final ArrayList<String> products = new ArrayList<>();
         products.addAll(Arrays.asList(mConsumables));
         products.addAll(Arrays.asList(mNonConsumables));
-        mIAPManager.fetchInventory(products);
+        mIAPManagerInUse.fetchInventory(products);
     }
 
     /**
      * Restore purchases. Listen to
      */
     public void restorePurchases() {
-        mIAPManager.restorePurchases();
+        if (mIAPManagerInUse == null)
+            return;
+        mIAPManagerInUse.restorePurchases();
     }
 
     /**
-     * Destroy initialized purchasing manager
+     * Pause XIAP manager instance when activity is paused
+     *
+     * @param activity activity instance
      */
-    public void destroy() {
-        mIAPManager.setListener(null);
-        mIAPManager.onDestroy();
+    public void onPause(final Activity activity) {
+        if (mIAPMap == null)
+            return;
+        mIAPMap.put(activity, mIAPManagerInUse);
     }
 
+    /**
+     * Resumes XIAP manager instance when activity is resumed
+     *
+     * @param activity
+     */
+    public void onResume(final Activity activity) {
+        if (mIAPMap == null)
+            return;
+        final AbstractIAPManager iapManager = mIAPMap.get(activity);
+        if (iapManager == null)
+            return;
+        mIAPManagerInUse = iapManager;
+    }
+
+    /**
+     * Destroy initialized managers
+     */
+    public void onDestroy(final Activity activity) {
+        if (mIAPMap == null)
+            return;
+        final AbstractIAPManager iapManager = mIAPMap.get(activity);
+        if (iapManager == null)
+            return;
+        iapManager.setListener(null);
+        iapManager.onDestroy();
+        mIAPMap.remove(activity);
+    }
+
+    /**
+     * Completely kill XIAP. No use after this is called.
+     */
+    public void kill() {
+        if (mIAPMap == null)
+            return;
+        mIAPManagerInUse = null;
+        mIAPMap.clear();
+        mIAPMap = null;
+    }
 
     enum PLATFORM {
         AMAZON, GOOGLE

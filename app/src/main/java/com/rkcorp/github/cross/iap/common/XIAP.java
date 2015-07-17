@@ -3,7 +3,6 @@ package com.rkcorp.github.cross.iap.common;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
-import android.os.Build;
 
 import com.rkcorp.github.cross.iap.amazon.AmazonIAP;
 import com.rkcorp.github.cross.iap.android.GoogleIAP;
@@ -29,14 +28,14 @@ public final class XIAP {
     private XIAP() {
     }
 
-    XIAP(Application application, String[] consumables, String[] nonConsumables, String googleKey) {
+    XIAP(Application application, String[] consumables, String[] nonConsumables, String googleKey, PLATFORM platform) {
         if (application == null) {
             throw new NullPointerException("Application instance must not be null");
         }
         mIAPMap = new WeakHashMap<>();
         mConsumables = consumables;
         mNonConsumables = nonConsumables;
-        mPlatform = Build.MANUFACTURER.contains("Amazon") ? PLATFORM.AMAZON : PLATFORM.GOOGLE;
+        mPlatform = platform;
         switch (mPlatform) {
             case AMAZON:
                 //Do nothing
@@ -67,7 +66,7 @@ public final class XIAP {
      * @param xiapBuilder Instance of Builder class
      */
     public static void create(Builder xiapBuilder) {
-        singleton = new XIAP(xiapBuilder.mApplication, xiapBuilder.mConsumables, xiapBuilder.mNonConsumables, xiapBuilder.mGoogleKey);
+        singleton = new XIAP(xiapBuilder.mApplication, xiapBuilder.mConsumables, xiapBuilder.mNonConsumables, xiapBuilder.mGoogleKey, xiapBuilder.mPlatform);
     }
 
     /**
@@ -195,7 +194,7 @@ public final class XIAP {
         mIAPMap = null;
     }
 
-    enum PLATFORM {
+    public enum PLATFORM {
         AMAZON, GOOGLE
     }
 
@@ -205,6 +204,7 @@ public final class XIAP {
         private String[] mConsumables;
         private String[] mNonConsumables;
         private String mGoogleKey;
+        private PLATFORM mPlatform;
 
         /**
          * Set application instance, this should be called in Application onCreate
@@ -218,16 +218,22 @@ public final class XIAP {
         }
 
         /**
-         * Set products ie. Sku list
+         * Set consumables
          *
-         * @param products Sku list params
+         * @param consumables Sku list params
          * @return instance of {@link XIAP.Builder}
          */
-        public Builder setConsumables(String... products) {
-            mConsumables = products;
+        public Builder setConsumables(String... consumables) {
+            mConsumables = consumables;
             return this;
         }
 
+        /**
+         * Set non consumables products
+         *
+         * @param nonConsumables Sku list params
+         * @return instance of {@link XIAP.Builder}
+         */
         public Builder setNonConsumables(String... nonConsumables) {
             mNonConsumables = nonConsumables;
             return this;
@@ -244,5 +250,15 @@ public final class XIAP {
             return this;
         }
 
+        /**
+         * Set platform to have purchase call to specific store
+         *
+         * @param platform {@link XIAP.PLATFORM}
+         * @return instance of {@link XIAP.Builder}
+         */
+        public Builder setPlatform(PLATFORM platform) {
+            mPlatform = platform;
+            return this;
+        }
     }
 }

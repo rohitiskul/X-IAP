@@ -82,7 +82,7 @@ public final class XIAP {
         }
         switch (mPlatform) {
             case AMAZON:
-                final AmazonIAP amazonIAP = new AmazonIAP(activity);
+                final AmazonIAP amazonIAP = new AmazonIAP(activity, mConsumables, mNonConsumables);
                 amazonIAP.setListener(listener);
                 amazonIAP.onCreate(activity);
                 mIAPMap.put(activity, amazonIAP);

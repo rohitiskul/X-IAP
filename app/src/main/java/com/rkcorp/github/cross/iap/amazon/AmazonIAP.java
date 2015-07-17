@@ -22,6 +22,7 @@ import com.rkcorp.github.cross.iap.common.models.RestoreSku;
 import com.rkcorp.github.cross.iap.common.models.SkuData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -34,13 +35,21 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
 
     public static final String TAG = "###AmazonIAP###";
 
-    public AmazonIAP(Context context) {
+    private final ArrayList<String> products = new ArrayList<>();
+
+    public AmazonIAP(Context context, String[] mConsumables, String[] mNonConsumables) {
         super(context);
+        products.addAll(Arrays.asList(mConsumables));
+        products.addAll(Arrays.asList(mNonConsumables));
     }
 
     @Override
     public void onCreate(Activity activity) {
         PurchasingService.registerListener(activity, this);
+        final Set<String> skuList = new HashSet<>();
+        skuList.addAll(products);
+        PurchasingService.getProductData(skuList);
+        PurchasingService.getPurchaseUpdates(false);
     }
 
     @Override
@@ -54,7 +63,7 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
 
     @Override
     public void fetchInventory(ArrayList<String> sku) {
-        Set<String> skuList = new HashSet<>();
+        final Set<String> skuList = new HashSet<>();
         skuList.addAll(sku);
         PurchasingService.getProductData(skuList);
     }
@@ -98,7 +107,6 @@ public class AmazonIAP extends AbstractIAPManager implements PurchasingListener 
                 final ArrayList<SkuData> skuDataArrayList = new ArrayList<>();
                 final ArrayList<SkuData> unavailableSkuDataList = new ArrayList<>();
                 for (Map.Entry<String, Product> entry : productMap.entrySet()) {
-                    System.out.println(entry.getKey() + " = " + entry.getValue());
                     SkuData sku = new SkuData();
                     sku.id = entry.getKey();
                     sku.title = entry.getValue().getTitle();
